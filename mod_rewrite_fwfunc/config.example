@@ -1,0 +1,35 @@
+<VirtualHost 10.0.0.0:443>
+    DocumentRoot /var/www/wildfw/
+    ServerName fh.hpc-portal.example.com
+    ServerAlias *.fh.hpc-portal.example.com
+
+    RequestHeader set X-Forwarded-User %{REMOTE_USER}s
+    RequestHeader unset Authorization
+    RequestHeader unset Origin
+
+    RewriteEngine On
+    LoadModule rewrite_fwfunc_module modules/mod_rewrite_fwfunc.so
+    RewriteMap wsfw int:fw_fh
+    <If "%{ENV:REDIRECT_STATUS} -ne 403>
+        Header unset Content-Security-Policy
+        Header always append Content-Security-Policy "default-src https://%{HTTP_HOST}s/ wss://%{HTTP_HOST}s/ 'unsafe-inline' 'unsafe-eval' data:; frame-ancestors 'self';"
+
+        RewriteCond "%{HTTP_HOST}" "^([a-z0-9_-]+).fh.hpc-portal.example.com(:[0-9]+)?$"
+        RewriteRule ^.*$ - [E=WSDST:${wsfw:%1|NOT_FOUND},NS]
+
+        RewriteCond %{ENV:WSDST} !NOT_FOUND
+        RewriteCond %{HTTP:UPGRADE} ^WebSocket$ [NC]
+        RewriteCond %{HTTP:CONNECTION} Upgrade [NC]
+        RewriteRule ^/var/www/wildfw(.*)$ "ws://%{ENV:WSDST}$1" [P,L]
+
+        RewriteCond %{ENV:WSDST} !NOT_FOUND
+        RewriteCond %{REQUEST_SCHEME} "^https$"
+        RewriteRule ^/var/www/wildfw(.*)$ "http://%{ENV:WSDST}$1" [P,L]
+
+        RewriteCond %{ENV:WSDST} !NOT_FOUND
+        RewriteCond %{REQUEST_SCHEME} "^wss$"
+        RewriteRule ^/var/www/wildfw(.*)$ "ws://%{ENV:WSDST}$1" [P,L]
+
+        RewriteRule ^(.*)$ - [R=410,L]
+    </If>
+</VirtualHost>

@@ -1,0 +1,5 @@
+# Example IPtables rules for /etc/iptables/rules.v4 & rules.v6:
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -m state --state NEW -p tcp --dport 1024: -j NFQUEUE --queue-num 0
+-A INPUT -m state --state NEW -p udp --dport 1024: -j NFQUEUE --queue-num 0
+-A INPUT -j ACCEPT

@@ -1,0 +1,17 @@
+[Unit]
+Description=netid daemon
+After=network.target ident2d.service
+Before=network-online.target
+Requires=ident2d.service
+StartLimitIntervalSec=500
+StartLimitBurst=5
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/netidd
+PIDFile=/var/run/netidd.pid
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

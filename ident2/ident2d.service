@@ -1,0 +1,11 @@
+[Unit]
+Description=ident2 daemon
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/ident2d
+PIDFile=/var/run/ident2d.pid
+
+[Install]
+WantedBy=multi-user.target
